@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>アタックサバイバル</title>
+  <style>
+    :root {
+      --bg: #f3f5f9;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #d8dee9;
+      --accent: #2457d6;
+      --accent-dark: #1c43a7;
+      --ok: #067647;
+      --warn: #b54708;
+      --danger: #d92d20;
+      --shadow: 0 10px 28px rgba(16, 24, 40, .08);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    button, input, textarea, select { font: inherit; }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .05s ease, filter .15s ease, opacity .15s ease;
+      user-select: none;
+    }
+    button:hover { filter: brightness(1.06); }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    .btn-secondary { background: #475467; }
+    .btn-ok { background: var(--ok); }
+    .btn-warn { background: var(--warn); }
+    .btn-danger { background: var(--danger); }
+    .btn-ghost {
+      color: #1d3b8f;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+    textarea { min-height: 76px; resize: vertical; }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(36, 87, 214, .12);
+    }
+
+    .app {
+      width: min(1480px, calc(100% - 28px));
+      margin: 18px auto 42px;
+    }
+
+    .appHeader {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .titleBlock h1 {
+      margin: 0;
+      font-size: clamp(28px, 3vw, 42px);
+      letter-spacing: .03em;
+    }
+
+    .titleBlock p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .topActions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .gridMain {
+      display: grid;
+      grid-template-columns: 410px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      margin-bottom: 16px;
+      padding: 16px;
+      border: 1px solid rgba(216, 222, 233, .9);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .fieldGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .fieldGrid .wide { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #344054;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .hint {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .playerNameGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .playerNameItem {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bulkPlayerBox {
+      margin-bottom: 12px;
+      padding: 12px;
+      border: 1px solid #e4e7ec;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .bulkPlayerBox textarea {
+      min-height: 118px;
+      line-height: 1.45;
+      white-space: pre;
+    }
+
+    .bulkActions {
+      display: grid;
+      grid-template-columns: 1.2fr 1.3fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .playerDeleteAllActions {
+      grid-template-columns: 1fr;
+      margin: 8px 0 10px;
+    }
+
+    .playerDeleteAllActions button {
+      width: 100%;
+    }
+
+    .numBadge {
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #eef2f7;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .answerBox { display: grid; gap: 10px; }
+    .answerActions, .resetActions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .resetActions { grid-template-columns: 1fr 1fr; }
+
+    .statusSummary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .summaryCard {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 5px 14px rgba(16, 24, 40, .05);
+    }
+    .summaryCard .value { font-size: 28px; font-weight: 950; line-height: 1; }
+    .summaryCard .label { margin-top: 6px; color: var(--muted); font-size: 12px; font-weight: 800; }
+
+    .tableWrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 780px;
+      border-collapse: collapse;
+      background: #fff;
+    }
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: center;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    th { background: #f8fafc; color: #475467; font-size: 12px; font-weight: 950; }
+    td.nameCell { min-width: 160px; text-align: left; font-weight: 900; }
+    tr.eliminatedRow { background: #fff1f0; }
+    tr.restingRow:not(.eliminatedRow) { background: #f2f4f7; color: #667085; }
+    tr.emptyRow { color: #98a2b3; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 56px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: #344054;
+      font-size: 12px;
+      font-weight: 950;
+    }
+    .pill.ok { background: #dcfae6; color: #067647; }
+    .pill.warn { background: #fef0c7; color: #93370d; }
+    .pill.dead { background: #fee4e2; color: #b42318; }
+
+    .historyList {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 330px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .historyItem {
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    .historyItem .time {
+      display: inline-block;
+      margin-right: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 100;
+      max-width: min(460px, calc(100vw - 36px));
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #101828;
+      color: #fff;
+      box-shadow: 0 18px 40px rgba(16, 24, 40, .24);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: .18s ease;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .displayScreen { display: none; }
+    body.displayMode { overflow: hidden; background: #000; }
+    body.displayMode .app { display: none; }
+    body.displayMode .displayScreen { display: flex; }
+
+    .displayScreen {
+      width: 100vw;
+      height: 100vh;
+      flex-direction: column;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+    }
+
+    .displayTop {
+      flex: 0 0 auto;
+      min-height: clamp(44px, 7.2vh, 72px);
+      max-height: 18vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(6px, 1vh, 12px) clamp(18px, 2.2vw, 36px);
+      border-bottom: 2px solid #fff;
+      background: #000;
+      text-align: center;
+    }
+
+    .displayRule {
+      width: 100%;
+      max-height: 2.35em;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      font-size: clamp(18px, 2.35vw, 34px);
+      font-weight: 950;
+      line-height: 1.16;
+      letter-spacing: .02em;
+    }
+
+    .displayGrid {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100vw;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-auto-rows: minmax(0, 1fr);
+      gap: 0;
+      align-items: stretch;
+      justify-items: stretch;
+      overflow: hidden;
+    }
+
+    .displayEmpty {
+      grid-column: 1 / -1;
+      display: grid;
+      place-items: center;
+      color: #8d96a8;
+      font-size: clamp(22px, 3vw, 44px);
+      font-weight: 900;
+    }
+
+    .displayCard {
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+      align-items: center;
+      justify-items: center;
+      row-gap: clamp(3px, .6vh, 8px);
+      overflow: hidden;
+      padding: clamp(8px, 1.15vh, 14px) clamp(14px, 1.55vw, 24px) clamp(10px, 1.25vh, 16px);
+      border-right: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      background: #111827;
+      text-align: center;
+    }
+    .displayCard:nth-child(4n) { border-right: 0; }
+    .displayCard.resting { background: #222733; }
+    .displayCard.eliminated { background: #8b1111; }
+
+    .displayName {
+      width: 100%;
+      min-width: 0;
+      min-height: 2.18em;
+      max-height: 2.32em;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: normal;
+      font-size: clamp(15px, 1.55vw, 25px);
+      font-weight: 950;
+      line-height: 1.08;
+      letter-spacing: .01em;
+      text-wrap: balance;
+    }
+    .displayCard.resting:not(.eliminated) .displayName { color: #a7adb8; }
+
+    .displayLife {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 0;
+      overflow: hidden;
+      font-size: clamp(44px, 8.1vh, 76px);
+      font-weight: 950;
+      line-height: .82;
+      letter-spacing: -.055em;
+    }
+    .displayLife span { display: block; }
+
+    .displayRest {
+      width: 100%;
+      color: #fde68a;
+      font-size: clamp(14px, 1.35vw, 22px);
+      font-weight: 950;
+      line-height: 1.08;
+      white-space: nowrap;
+    }
+
+    .displayRecord {
+      width: 100%;
+      color: #f3f4f6;
+      font-size: clamp(13px, 1.25vw, 20px);
+      font-weight: 900;
+      line-height: 1.08;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+    }
+
+    .displayDamage {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 100%;
+      min-width: min(88%, 260px);
+      padding: .16em .55em .2em;
+      border: 2px solid rgba(255,255,255,.86);
+      border-radius: 999px;
+      font-size: clamp(12px, 1.05vw, 18px);
+      font-weight: 950;
+      line-height: 1.08;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .displayToolbox {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+      opacity: .08;
+      transition: opacity .15s ease;
+    }
+    .displayToolbox:hover { opacity: 1; }
+    .displayToolbox button {
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,.4);
+      background: rgba(31, 41, 55, .92);
+      font-size: 12px;
+    }
+
+    @media (max-height: 760px) {
+      .displayTop { min-height: 54px; }
+      .displayRule { font-size: clamp(17px, 2.05vw, 28px); line-height: 1.12; }
+      .displayCard { row-gap: 3px; padding-top: 8px; padding-bottom: 10px; }
+      .displayName { font-size: clamp(14px, 1.42vw, 22px); min-height: 2.12em; max-height: 2.2em; }
+      .displayLife { font-size: clamp(40px, 7.35vh, 64px); }
+      .displayRest, .displayRecord, .displayDamage { font-size: clamp(12px, 1.14vw, 17px); }
+    }
+
+    @media (max-width: 1100px) {
+      .gridMain { grid-template-columns: 1fr; }
+      .statusSummary { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 720px) {
+      .app { width: min(100% - 18px, 1480px); margin-top: 10px; }
+      .appHeader { flex-direction: column; }
+      .topActions { justify-content: flex-start; }
+      .fieldGrid, .playerNameGrid, .answerActions, .resetActions, .historyControls, .bulkActions { grid-template-columns: 1fr; }
+      .playerNameItem { grid-template-columns: 34px minmax(0, 1fr) auto; }
+      .statusSummary { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" id="controlApp">
+    <header class="appHeader">
+      <div class="titleBlock">
+        <h1>アタックサバイバル</h1>
+        <p>クイズ大会運営用Webアプリ。HTML単体で動作し、オンラインの静的ページとして公開しても同じ画面構成で使えます。</p>
+      </div>
+      <div class="topActions">
+        <button type="button" id="openDisplayBtn">表示画面を別ウィンドウで開く</button>
+        <button type="button" class="btn-ghost" id="switchDisplayBtn">この画面を表示モードにする</button>
+      </div>
+    </header>
+
+    <div class="gridMain">
+      <aside>
+        <section class="panel">
+          <h2>ルール設定</h2>
+          <div class="fieldGrid">
+            <div class="wide">
+              <label for="ruleText">画面上部ルール表示文</label>
+              <textarea id="ruleText" placeholder="例：正解で他全員にダメージ／誤答で休み＋攻撃力減少"></textarea>
+            </div>
+            <div>
+              <label for="initialLife">初期ライフポイント</label>
+              <input type="number" id="initialLife" min="1" step="1" />
+            </div>
+            <div>
+              <label for="initialDamage">初期・正解時の相手へのダメージ数</label>
+              <input type="number" id="initialDamage" min="1" step="1" />
+            </div>
+            <div>
+              <label for="missRest">誤答時のお休み問題数</label>
+              <input type="number" id="missRest" min="0" step="1" />
+            </div>
+            <div>
+              <label for="missDamageDown">誤答時の相手へのダメージ減少数</label>
+              <input type="number" id="missDamageDown" min="0" step="1" />
+            </div>
+          </div>
+          <p class="hint">設定変更は自動保存されます。初期値を試合に反映する場合は「設定だけ残して試合状況をリセット」を押してください。</p>
+        </section>
+
+        <section class="panel">
+          <h2>プレイヤー設定</h2>
+          <div class="bulkActions playerDeleteAllActions">
+            <button type="button" class="btn-danger" id="deleteAllPlayersBtn">プレイヤー欄を一括削除</button>
+          </div>
+          <div class="bulkPlayerBox">
+            <label for="playerBulkNames">プレイヤー名一括入力</label>
+            <textarea id="playerBulkNames" placeholder="例：
+プレイヤーA
+プレイヤーB
+プレイヤーC"></textarea>
+            <div class="bulkActions">
+              <button type="button" class="btn-ok" id="applyBulkNamesBtn">一括反映</button>
+              <button type="button" class="btn-ghost" id="loadBulkNamesBtn">個別欄を一括欄へ読み込み</button>
+              <button type="button" class="btn-ghost" id="clearBulkNamesBtn">一括欄をクリア</button>
+            </div>
+            <p class="hint">1行につき1名で最大12名まで反映します。1行の中でカンマ・読点・タブ区切りにした場合も一括入力できます。</p>
+          </div>
+          <div class="playerNameGrid" id="playerNameGrid"></div>
+          <p class="hint">名前が空欄のプレイヤーは、表示画面ではカード・白枠・背景を含めて完全に非表示になります。全員を空欄にする場合は「プレイヤー欄を一括削除」を使用してください。</p>
+        </section>
+
+        <section class="panel">
+          <h2>正解／誤答／スルー入力</h2>
+          <div class="answerBox">
+            <div>
+              <label for="answerSelect">解答者選択</label>
+              <select id="answerSelect"></select>
+            </div>
+            <div class="answerActions">
+              <button type="button" class="btn-ok" id="correctBtn">正解</button>
+              <button type="button" class="btn-warn" id="wrongBtn">誤答</button>
+              <button type="button" class="btn-secondary" id="passBtn">スルー</button>
+            </div>
+            <div class="historyControls"><button type="button" class="btn-ghost" id="undoBtn">Undo</button><button type="button" class="btn-ghost" id="redoBtn">Redo</button></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>リセット</h2>
+          <div class="resetActions">
+            <button type="button" class="btn-warn" id="resetMatchBtn">設定だけ残して試合状況をリセット</button>
+            <button type="button" class="btn-danger" id="resetAllBtn">全状態を初期化</button>
+          </div>
+        </section>
+      </aside>
+
+      <section>
+        <div class="statusSummary" id="statusSummary"></div>
+
+        <section class="panel">
+          <h2>現在状況一覧</h2>
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>プレイヤー名</th>
+                  <th>状態</th>
+                  <th>ライフ</th>
+                  <th>残り休み</th>
+                  <th>正解</th>
+                  <th>誤答</th>
+                  <th>相手へのダメージ</th>
+                  <th>選択</th>
+                </tr>
+              </thead>
+              <tbody id="statusTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>入力履歴</h2>
+          <div class="historyList" id="historyList"></div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <section class="displayScreen" id="displayScreen" aria-label="外部モニター表示画面">
+    <div class="displayTop">
+      <div class="displayRule" id="displayRule">アタックサバイバル</div>
+    </div>
+    <div class="displayGrid" id="displayGrid"></div>
+    <div class="displayToolbox">
+      <button type="button" id="displayFullBtn">フルスクリーン</button>
+      <button type="button" id="backControlBtn">操作画面へ戻る</button>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const PLAYER_MAX = 12;
+      const STORAGE_KEY = 'attackSurvivalState.v4';
+      const LEGACY_KEYS = ['attackSurvivalState.v3', 'attackSurvivalState.v2'];
+      const CHANNEL_NAME = 'attackSurvivalChannel.v4';
+      const SESSION_ID = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const $ = (id) => document.getElementById(id);
+
+      let toastTimer = null;
+      let channel = null;
+
+      const defaultSettings = () => ({
+        ruleText: '正解で他全員にダメージ／誤答で休み＋ダメージ減少／スルーで全員ライフ-1',
+        initialLife: 10,
+        initialDamage: 3,
+        missRest: 1,
+        missDamageDown: 1,
+        names: Array.from({ length: PLAYER_MAX }, () => '')
+      });
+
+      const createPlayer = (index, name = '', settings = defaultSettings()) => ({
+        id: index + 1,
+        name: String(name || ''),
+        life: toInt(settings.initialLife, 10),
+        damage: toInt(settings.initialDamage, 3),
+        rest: 0,
+        correct: 0,
+        wrong: 0,
+        eliminated: false
+      });
+
+      let state = loadState();
+
+      function toInt(value, fallback = 0) {
+        const n = Number.parseInt(value, 10);
+        return Number.isFinite(n) ? n : fallback;
+      }
+
+      function clampInt(value, min, fallback) {
+        return Math.max(min, toInt(value, fallback));
+      }
+
+      function normalizeSettings(raw) {
+        const base = defaultSettings();
+        const merged = { ...base, ...(raw || {}) };
+        merged.ruleText = String(merged.ruleText || base.ruleText);
+        merged.initialLife = clampInt(merged.initialLife, 1, base.initialLife);
+        merged.initialDamage = clampInt(merged.initialDamage, 1, base.initialDamage);
+        merged.missRest = clampInt(merged.missRest, 0, base.missRest);
+        merged.missDamageDown = clampInt(merged.missDamageDown, 0, base.missDamageDown);
+        merged.names = Array.from({ length: PLAYER_MAX }, (_, i) => String((merged.names || [])[i] ?? ''));
+        return merged;
+      }
+
+      function normalizePlayers(rawPlayers, settings) {
+        const source = Array.isArray(rawPlayers) ? rawPlayers : [];
+        return Array.from({ length: PLAYER_MAX }, (_, i) => {
+          const raw = source[i] || {};
+          const name = String(settings.names[i] ?? raw.name ?? '');
+          const p = {
+            id: i + 1,
+            name,
+            life: toInt(raw.life, settings.initialLife),
+            damage: toInt(raw.damage, settings.initialDamage),
+            rest: Math.max(0, toInt(raw.rest, 0)),
+            correct: Math.max(0, toInt(raw.correct, 0)),
+            wrong: Math.max(0, toInt(raw.wrong, 0)),
+            eliminated: Boolean(raw.eliminated)
+          };
+          if (!p.name.trim() && !source[i]) return createPlayer(i, '', settings);
+          p.eliminated = p.eliminated || (p.name.trim() && (p.life <= 0 || p.damage <= 0));
+          return p;
+        });
+      }
+
+      function sanitizeStackForStartup(stack, shouldResetHistory) {
+        if (!Array.isArray(stack)) return [];
+        return stack.slice(0, 30).map(snapshot => {
+          const copy = JSON.parse(JSON.stringify(snapshot || {}));
+          if (shouldResetHistory) copy.history = [];
+          return copy;
+        });
+      }
+
+      function shouldResetHistoryOnStartup() {
+        return !window.location.hash.toLowerCase().includes('display');
+      }
+
+      function loadState() {
+        const resetHistoryOnStartup = shouldResetHistoryOnStartup();
+        let raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          for (const key of LEGACY_KEYS) {
+            raw = localStorage.getItem(key);
+            if (raw) break;
+          }
+        }
+        if (!raw) {
+          const settings = defaultSettings();
+          return {
+            settings,
+            players: Array.from({ length: PLAYER_MAX }, (_, i) => createPlayer(i, settings.names[i], settings)),
+            history: [],
+            undoStack: [],
+            redoStack: [],
+            updatedAt: Date.now(),
+            sourceId: SESSION_ID
+          };
+        }
+        try {
+          const parsed = JSON.parse(raw);
+          const settings = normalizeSettings(parsed.settings);
+          return {
+            settings,
+            players: normalizePlayers(parsed.players, settings),
+            history: resetHistoryOnStartup ? [] : (Array.isArray(parsed.history) ? parsed.history : []),
+            undoStack: sanitizeStackForStartup(parsed.undoStack, resetHistoryOnStartup),
+            redoStack: sanitizeStackForStartup(parsed.redoStack, resetHistoryOnStartup),
+            updatedAt: Date.now(),
+            sourceId: SESSION_ID
+          };
+        } catch (error) {
+          console.warn('保存データを読み込めなかったため初期化しました。', error);
+          const settings = defaultSettings();
+          return {
+            settings,
+            players: Array.from({ length: PLAYER_MAX }, (_, i) => createPlayer(i, settings.names[i], settings)),
+            history: [],
+            undoStack: [],
+            redoStack: [],
+            updatedAt: Date.now(),
+            sourceId: SESSION_ID
+          };
+        }
+      }
+
+      function saveState({ broadcast = true } = {}) {
+        state.updatedAt = Date.now();
+        state.sourceId = SESSION_ID;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        if (broadcast && channel) {
+          channel.postMessage({ type: 'state', state, sourceId: SESSION_ID });
+        }
+      }
+
+      function makeSnapshot() {
+        return JSON.parse(JSON.stringify({
+          settings: state.settings,
+          players: state.players,
+          history: state.history
+        }));
+      }
+
+      function restoreSnapshot(snapshot) {
+        const settings = normalizeSettings(snapshot.settings);
+        state.settings = settings;
+        state.players = normalizePlayers(snapshot.players, settings);
+        state.history = Array.isArray(snapshot.history) ? snapshot.history : [];
+      }
+
+      function pushUndo({ clearRedo = true } = {}) {
+        state.undoStack = Array.isArray(state.undoStack) ? state.undoStack : [];
+        state.undoStack.unshift(makeSnapshot());
+        state.undoStack = state.undoStack.slice(0, 30);
+        if (clearRedo) state.redoStack = [];
+      }
+
+      function pushRedo() {
+        state.redoStack = Array.isArray(state.redoStack) ? state.redoStack : [];
+        state.redoStack.unshift(makeSnapshot());
+        state.redoStack = state.redoStack.slice(0, 30);
+      }
+
+      function showToast(message) {
+        const toast = $('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+      }
+
+      function nowLabel() {
+        return new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+
+      function pushHistory(text) {
+        state.history.unshift({ time: nowLabel(), text });
+        state.history = state.history.slice(0, 150);
+      }
+
+      function activePlayers() {
+        return state.players.filter(p => p.name.trim());
+      }
+
+      function livingPlayers() {
+        return activePlayers().filter(p => !p.eliminated);
+      }
+
+      function checkElimination(p) {
+        if (!p.name.trim()) return;
+        if (p.life <= 0 || p.damage <= 0) {
+          p.eliminated = true;
+          p.life = Math.max(0, p.life);
+          p.damage = Math.max(0, p.damage);
+          p.rest = 0;
+        }
+      }
+
+      function advanceRest(exceptIndex = null) {
+        state.players.forEach((p, i) => {
+          if (i === exceptIndex || !p.name.trim() || p.eliminated) return;
+          if (p.rest > 0) p.rest -= 1;
+        });
+      }
+
+      function selectedIndex() {
+        const value = $('answerSelect').value;
+        if (value === '') return null;
+        const index = Number(value);
+        return Number.isInteger(index) && index >= 0 && index < PLAYER_MAX ? index : null;
+      }
+
+      function requireSelectablePlayer() {
+        const index = selectedIndex();
+        if (index === null) {
+          showToast('解答者を選択してください。');
+          return null;
+        }
+        const p = state.players[index];
+        if (!p || !p.name.trim()) {
+          showToast('プレイヤー名が未設定です。');
+          return null;
+        }
+        if (p.eliminated) {
+          showToast('脱落済みのプレイヤーは選択できません。');
+          return null;
+        }
+        if (p.rest > 0) {
+          showToast('休み中のプレイヤーは選択できません。');
+          return null;
+        }
+        return { index, player: p };
+      }
+
+      function handleCorrect() {
+        const selected = requireSelectablePlayer();
+        if (!selected) return;
+        const { index, player } = selected;
+        pushUndo();
+        const damage = Math.max(0, toInt(player.damage, 0));
+        player.correct += 1;
+        let eliminatedCount = 0;
+        state.players.forEach((target, i) => {
+          if (i === index || !target.name.trim() || target.eliminated) return;
+          target.life -= damage;
+          const wasAlive = !target.eliminated;
+          checkElimination(target);
+          if (wasAlive && target.eliminated) eliminatedCount += 1;
+        });
+        advanceRest();
+        pushHistory(`正解：${player.name}（他の生存者へ${damage}ダメージ${eliminatedCount ? `、${eliminatedCount}名脱落` : ''}）`);
+        saveState();
+        renderAll();
+      }
+
+      function handleWrong() {
+        const selected = requireSelectablePlayer();
+        if (!selected) return;
+        const { index, player } = selected;
+        pushUndo();
+        const rest = Math.max(0, toInt(state.settings.missRest, 0));
+        const down = Math.max(0, toInt(state.settings.missDamageDown, 0));
+        advanceRest(index);
+        player.wrong += 1;
+        player.rest = rest;
+        player.damage -= down;
+        const wasAlive = !player.eliminated;
+        checkElimination(player);
+        pushHistory(`誤答：${player.name}（休み${rest}問、相手へのダメージ-${down}${wasAlive && player.eliminated ? '、脱落' : ''}）`);
+        saveState();
+        renderAll();
+      }
+
+      function handlePass() {
+        const alive = livingPlayers();
+        if (!alive.length) {
+          showToast('生存プレイヤーがいません。');
+          return;
+        }
+        pushUndo();
+        let eliminatedCount = 0;
+        alive.forEach(p => {
+          p.life -= 1;
+          const wasAlive = !p.eliminated;
+          checkElimination(p);
+          if (wasAlive && p.eliminated) eliminatedCount += 1;
+        });
+        advanceRest();
+        pushHistory(`スルー：生存者全員のライフ-1${eliminatedCount ? `、${eliminatedCount}名脱落` : ''}`);
+        saveState();
+        renderAll();
+      }
+
+      function handleUndo() {
+        if (!state.undoStack.length) {
+          showToast('Undoできる履歴がありません。');
+          return;
+        }
+        pushRedo();
+        const snapshot = state.undoStack.shift();
+        restoreSnapshot(snapshot);
+        pushHistory('Undo：直前の操作を取り消しました');
+        applyInputsFromState();
+        saveState();
+        renderAll();
+      }
+
+      function handleRedo() {
+        state.redoStack = Array.isArray(state.redoStack) ? state.redoStack : [];
+        if (!state.redoStack.length) {
+          showToast('Redoできる履歴がありません。');
+          return;
+        }
+        pushUndo({ clearRedo: false });
+        const snapshot = state.redoStack.shift();
+        restoreSnapshot(snapshot);
+        pushHistory('Redo：取り消した操作をやり直しました');
+        applyInputsFromState();
+        saveState();
+        renderAll();
+      }
+
+      function resetMatchKeepSettings() {
+        if (!confirm('プレイヤー名とルール設定を残して、ライフ・休み・正解数・誤答数・脱落状態を初期化します。よろしいですか？')) return;
+        pushUndo();
+        state.players = state.settings.names.map((name, i) => createPlayer(i, name, state.settings));
+        state.history = [];
+        pushHistory('試合状況をリセットしました');
+        saveState();
+        renderAll();
+      }
+
+      function resetAll() {
+        if (!confirm('すべての設定・プレイヤー名・試合状況・履歴を初期化します。よろしいですか？')) return;
+        const settings = defaultSettings();
+        state = {
+          settings,
+          players: Array.from({ length: PLAYER_MAX }, (_, i) => createPlayer(i, '', settings)),
+          history: [],
+          undoStack: [],
+          redoStack: [],
+          updatedAt: Date.now(),
+          sourceId: SESSION_ID
+        };
+        localStorage.removeItem(STORAGE_KEY);
+        applyInputsFromState();
+        saveState();
+        renderAll();
+        showToast('全状態を初期化しました。');
+      }
+
+      function namesToBulkText(names = state.settings.names) {
+        const list = Array.from({ length: PLAYER_MAX }, (_, i) => String((names || [])[i] || ''));
+        let last = -1;
+        list.forEach((name, i) => { if (name.trim()) last = i; });
+        return last >= 0 ? list.slice(0, last + 1).join('\n') : '';
+      }
+
+      function updateBulkNamesTextarea() {
+        const textarea = $('playerBulkNames');
+        if (!textarea || document.activeElement === textarea) return;
+        textarea.value = namesToBulkText();
+      }
+
+      function parseBulkNames(text) {
+        const raw = String(text || '').replace(/\r/g, '');
+        if (!raw.trim()) return [];
+        let parts;
+        if (raw.includes('\n')) {
+          parts = raw.split('\n').flatMap(line => line.includes(',') || line.includes('、') || line.includes('\t') ? line.split(/[,、\t]+/) : [line]);
+        } else {
+          parts = raw.split(/[,、\t]+/);
+        }
+        return parts.slice(0, PLAYER_MAX).map(name => name.trim());
+      }
+
+      function applyBulkNames() {
+        const textarea = $('playerBulkNames');
+        const names = parseBulkNames(textarea.value);
+        if (!names.length && !confirm('プレイヤー名をすべて空欄にします。よろしいですか？')) return;
+        pushUndo();
+        for (let i = 0; i < PLAYER_MAX; i++) {
+          const input = $('playerName' + i);
+          if (input) input.value = names[i] || '';
+        }
+        syncSettingsFromInputs({ skipBulkRefresh: true });
+        textarea.value = namesToBulkText(state.settings.names);
+        pushHistory('プレイヤー名を一括設定しました');
+        saveState();
+        renderAll();
+        showToast('プレイヤー名を一括反映しました。');
+      }
+
+      function deleteAllPlayerSlots() {
+        const hasAnyData = state.players.some((player, index) => {
+          const name = String(state.settings.names[index] || player.name || '').trim();
+          return Boolean(name) || player.rest > 0 || player.correct > 0 || player.wrong > 0 || player.eliminated || player.life !== state.settings.initialLife || player.damage !== state.settings.initialDamage;
+        });
+        if (!hasAnyData) {
+          showToast('削除できるプレイヤー欄がありません。');
+          return;
+        }
+        if (!confirm('すべてのプレイヤー欄を削除します。よろしいですか？')) return;
+        pushUndo();
+        state.redoStack = [];
+        for (let i = 0; i < PLAYER_MAX; i++) {
+          state.settings.names[i] = '';
+          state.players[i] = createPlayer(i, '', state.settings);
+          const input = $('playerName' + i);
+          if (input) input.value = '';
+        }
+        updateBulkNamesTextarea();
+        pushHistory('プレイヤー欄を一括削除しました');
+        saveState();
+        renderAll();
+        showToast('プレイヤー欄を一括削除しました。');
+      }
+
+      function syncSettingsFromInputs(options = {}) {
+        state.redoStack = [];
+        const previousNames = [...state.settings.names];
+        state.settings.ruleText = $('ruleText').value;
+        state.settings.initialLife = clampInt($('initialLife').value, 1, defaultSettings().initialLife);
+        state.settings.initialDamage = clampInt($('initialDamage').value, 1, defaultSettings().initialDamage);
+        state.settings.missRest = clampInt($('missRest').value, 0, defaultSettings().missRest);
+        state.settings.missDamageDown = clampInt($('missDamageDown').value, 0, defaultSettings().missDamageDown);
+        for (let i = 0; i < PLAYER_MAX; i++) {
+          state.settings.names[i] = ($('playerName' + i)?.value || '').trim();
+          const player = state.players[i] || createPlayer(i, '', state.settings);
+          const oldName = previousNames[i] || '';
+          const newName = state.settings.names[i] || '';
+          const wasEmpty = !oldName.trim() && !player.name.trim();
+          if (!newName.trim()) {
+            state.players[i] = createPlayer(i, '', state.settings);
+            continue;
+          }
+          player.name = newName;
+          if (wasEmpty) {
+            player.life = state.settings.initialLife;
+            player.damage = state.settings.initialDamage;
+            player.rest = 0;
+            player.correct = 0;
+            player.wrong = 0;
+            player.eliminated = false;
+          }
+          state.players[i] = player;
+        }
+        if (!options.skipBulkRefresh) updateBulkNamesTextarea();
+        saveState();
+        renderAll();
+      }
+
+      function applyInputsFromState() {
+        $('ruleText').value = state.settings.ruleText;
+        $('initialLife').value = state.settings.initialLife;
+        $('initialDamage').value = state.settings.initialDamage;
+        $('missRest').value = state.settings.missRest;
+        $('missDamageDown').value = state.settings.missDamageDown;
+        for (let i = 0; i < PLAYER_MAX; i++) {
+          const input = $('playerName' + i);
+          if (input) input.value = state.settings.names[i] || '';
+        }
+        updateBulkNamesTextarea();
+      }
+
+      function renderPlayerNameInputs() {
+        const wrap = $('playerNameGrid');
+        wrap.innerHTML = '';
+        for (let i = 0; i < PLAYER_MAX; i++) {
+          const item = document.createElement('div');
+          item.className = 'playerNameItem';
+          item.innerHTML = `
+            <div class="numBadge">${i + 1}</div>
+            <input type="text" id="playerName${i}" maxlength="24" placeholder="プレイヤー${i + 1}" autocomplete="off" />
+          `;
+          wrap.appendChild(item);
+        }
+      }
+
+      function renderAnswerSelect() {
+        const select = $('answerSelect');
+        const previous = select.value;
+        select.innerHTML = '';
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = '解答者を選択';
+        select.appendChild(empty);
+
+        activePlayers().forEach(p => {
+          const option = document.createElement('option');
+          const index = p.id - 1;
+          option.value = String(index);
+          const status = p.eliminated ? '脱落' : p.rest > 0 ? `休み${p.rest}` : '解答可';
+          option.textContent = `${p.id}. ${p.name}（${status}）`;
+          option.disabled = p.eliminated || p.rest > 0;
+          select.appendChild(option);
+        });
+
+        if ([...select.options].some(o => o.value === previous && !o.disabled)) {
+          select.value = previous;
+        }
+      }
+
+      function renderSummary() {
+        const active = activePlayers();
+        const alive = active.filter(p => !p.eliminated);
+        const resting = alive.filter(p => p.rest > 0);
+        const eliminated = active.filter(p => p.eliminated);
+        const totalCorrect = active.reduce((sum, p) => sum + p.correct, 0);
+        const items = [
+          ['参加者', active.length],
+          ['生存', alive.length],
+          ['休み中', resting.length],
+          ['脱落', eliminated.length],
+          ['累計正解', totalCorrect],
+          ['残り最大ライフ', alive.length ? Math.max(...alive.map(p => p.life)) : 0],
+          ['最大ダメージ', alive.length ? Math.max(...alive.map(p => p.damage)) : 0],
+          ['Undo可能', state.undoStack.length],
+          ['Redo可能', Array.isArray(state.redoStack) ? state.redoStack.length : 0]
+        ];
+        $('statusSummary').innerHTML = items.map(([label, value]) => `
+          <div class="summaryCard">
+            <div class="value">${escapeHtml(value)}</div>
+            <div class="label">${escapeHtml(label)}</div>
+          </div>
+        `).join('');
+      }
+
+      function playerStatusPill(p) {
+        if (!p.name.trim()) return '<span class="pill">未設定</span>';
+        if (p.eliminated) return '<span class="pill dead">脱落</span>';
+        if (p.rest > 0) return `<span class="pill warn">休み${p.rest}</span>`;
+        return '<span class="pill ok">生存</span>';
+      }
+
+      function renderStatusTable() {
+        const body = $('statusTableBody');
+        body.innerHTML = '';
+        state.players.forEach((p, i) => {
+          const tr = document.createElement('tr');
+          tr.className = !p.name.trim() ? 'emptyRow' : p.eliminated ? 'eliminatedRow' : p.rest > 0 ? 'restingRow' : '';
+          tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td class="nameCell">${p.name.trim() ? escapeHtml(p.name) : '未設定'}</td>
+            <td>${playerStatusPill(p)}</td>
+            <td>${Math.max(0, toInt(p.life, 0))}</td>
+            <td>${Math.max(0, toInt(p.rest, 0))}</td>
+            <td>${Math.max(0, toInt(p.correct, 0))}</td>
+            <td>${Math.max(0, toInt(p.wrong, 0))}</td>
+            <td>${Math.max(0, toInt(p.damage, 0))}</td>
+            <td><button type="button" class="btn-ghost selectPlayerBtn" data-index="${i}" ${(!p.name.trim() || p.eliminated || p.rest > 0) ? 'disabled' : ''}>選択</button></td>
+          `;
+          body.appendChild(tr);
+        });
+      }
+
+      function renderHistory() {
+        const list = $('historyList');
+        if (!state.history.length) {
+          list.innerHTML = '<div class="historyItem">まだ入力履歴はありません。</div>';
+          return;
+        }
+        list.innerHTML = state.history.slice(0, 90).map(item => `
+          <div class="historyItem"><span class="time">${escapeHtml(item.time || '')}</span>${escapeHtml(item.text || '')}</div>
+        `).join('');
+      }
+
+      function renderDisplay() {
+        $('displayRule').textContent = state.settings.ruleText || 'アタックサバイバル';
+        const grid = $('displayGrid');
+        const visible = activePlayers();
+        const rows = Math.max(1, Math.min(3, Math.ceil(visible.length / 4)));
+        grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+        grid.innerHTML = '';
+        if (!visible.length) {
+          const empty = document.createElement('div');
+          empty.className = 'displayEmpty';
+          empty.textContent = 'プレイヤー名を入力してください';
+          grid.appendChild(empty);
+          return;
+        }
+        visible.forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'displayCard' + (p.eliminated ? ' eliminated' : p.rest > 0 ? ' resting' : '');
+          const rest = Math.max(0, toInt(p.rest, 0));
+          card.innerHTML = `
+            <div class="displayName" title="${escapeAttr(p.name)}">${escapeHtml(p.name)}</div>
+            <div class="displayLife"><span>${Math.max(0, toInt(p.life, 0))}</span></div>
+            ${rest > 0 ? `<div class="displayRest">残り${rest}休</div>` : ''}
+            <div class="displayRecord">○ ${Math.max(0, toInt(p.correct, 0))}　× ${Math.max(0, toInt(p.wrong, 0))}</div>
+            <div class="displayDamage">相手へのダメージ ${Math.max(0, toInt(p.damage, 0))}</div>
+          `;
+          grid.appendChild(card);
+        });
+        requestAnimationFrame(fitDisplayText);
+      }
+
+      function fitDisplayText() {
+        const fit = (el, minPx) => {
+          if (!el) return;
+          const computed = window.getComputedStyle(el);
+          const base = Number.parseFloat(computed.fontSize) || 18;
+          el.style.fontSize = `${base}px`;
+          let size = base;
+          let guard = 0;
+          while (size > minPx && guard < 40 && (el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1)) {
+            size -= 1;
+            el.style.fontSize = `${size}px`;
+            guard += 1;
+          }
+        };
+        fit($('displayRule'), 14);
+        document.querySelectorAll('.displayName').forEach(el => fit(el, 12));
+        document.querySelectorAll('.displayRecord, .displayDamage, .displayRest').forEach(el => fit(el, 11));
+      }
+
+      function renderAll() {
+        renderAnswerSelect();
+        renderSummary();
+        renderStatusTable();
+        renderHistory();
+        renderDisplay();
+        $('undoBtn').disabled = state.undoStack.length === 0;
+        $('redoBtn').disabled = !Array.isArray(state.redoStack) || state.redoStack.length === 0;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function escapeAttr(value) {
+        return escapeHtml(value).replaceAll('`', '&#096;');
+      }
+
+      function openDisplayWindow() {
+        syncSettingsFromInputs();
+        const url = new URL(window.location.href);
+        url.hash = 'display';
+        const displayWindow = window.open(url.toString(), 'attackSurvivalDisplay', 'width=1280,height=720,noopener=no,noreferrer=no');
+        if (!displayWindow) {
+          showToast('別ウィンドウを開けませんでした。ブラウザのポップアップ許可を確認してください。');
+          return;
+        }
+        try { displayWindow.focus(); } catch (error) { /* ignore */ }
+      }
+
+      function applyModeFromHash() {
+        const displayMode = window.location.hash.toLowerCase().includes('display');
+        document.body.classList.toggle('displayMode', displayMode);
+        renderDisplay();
+      }
+
+      function receiveExternalState(incoming) {
+        if (!incoming || incoming.sourceId === SESSION_ID) return;
+        if (!Number(incoming.updatedAt) || Number(incoming.updatedAt) < Number(state.updatedAt || 0)) return;
+        const settings = normalizeSettings(incoming.settings);
+        state = {
+          settings,
+          players: normalizePlayers(incoming.players, settings),
+          history: Array.isArray(incoming.history) ? incoming.history : [],
+          undoStack: Array.isArray(incoming.undoStack) ? incoming.undoStack : [],
+          redoStack: Array.isArray(incoming.redoStack) ? incoming.redoStack : [],
+          updatedAt: Number(incoming.updatedAt) || Date.now(),
+          sourceId: incoming.sourceId || 'external'
+        };
+        applyInputsFromState();
+        renderAll();
+      }
+
+      function bindEvents() {
+        ['ruleText', 'initialLife', 'initialDamage', 'missRest', 'missDamageDown'].forEach(id => {
+          $(id).addEventListener('input', syncSettingsFromInputs);
+          $(id).addEventListener('change', syncSettingsFromInputs);
+        });
+        for (let i = 0; i < PLAYER_MAX; i++) {
+          const nameInput = $('playerName' + i);
+          nameInput.addEventListener('input', syncSettingsFromInputs);
+          nameInput.addEventListener('change', syncSettingsFromInputs);
+        }
+        $('applyBulkNamesBtn').addEventListener('click', applyBulkNames);
+        $('loadBulkNamesBtn').addEventListener('click', () => {
+          $('playerBulkNames').value = namesToBulkText();
+          showToast('現在の個別欄を一括入力欄へ読み込みました。');
+        });
+        $('clearBulkNamesBtn').addEventListener('click', () => {
+          $('playerBulkNames').value = '';
+          $('playerBulkNames').focus();
+        });
+        $('deleteAllPlayersBtn').addEventListener('click', deleteAllPlayerSlots);
+
+        $('correctBtn').addEventListener('click', handleCorrect);
+        $('wrongBtn').addEventListener('click', handleWrong);
+        $('passBtn').addEventListener('click', handlePass);
+        $('undoBtn').addEventListener('click', handleUndo);
+        $('redoBtn').addEventListener('click', handleRedo);
+        $('resetMatchBtn').addEventListener('click', resetMatchKeepSettings);
+        $('resetAllBtn').addEventListener('click', resetAll);
+        $('openDisplayBtn').addEventListener('click', openDisplayWindow);
+        $('switchDisplayBtn').addEventListener('click', () => {
+          syncSettingsFromInputs();
+          window.location.hash = 'display';
+          applyModeFromHash();
+        });
+
+        $('statusTableBody').addEventListener('click', (event) => {
+          const btn = event.target.closest('.selectPlayerBtn');
+          if (!btn) return;
+          $('answerSelect').value = btn.dataset.index;
+          showToast(`${state.players[Number(btn.dataset.index)].name}を選択しました。`);
+        });
+
+        $('displayFullBtn').addEventListener('click', async () => {
+          try {
+            if (!document.fullscreenElement) {
+              await document.documentElement.requestFullscreen();
+            } else {
+              await document.exitFullscreen();
+            }
+          } catch (error) {
+            showToast('フルスクリーンにできませんでした。ブラウザの権限をご確認ください。');
+          }
+        });
+
+        $('backControlBtn').addEventListener('click', () => {
+          window.location.hash = '';
+          applyModeFromHash();
+        });
+
+        window.addEventListener('hashchange', applyModeFromHash);
+        window.addEventListener('resize', () => requestAnimationFrame(fitDisplayText));
+        window.addEventListener('storage', (event) => {
+          if (event.key !== STORAGE_KEY || !event.newValue) return;
+          try { receiveExternalState(JSON.parse(event.newValue)); }
+          catch (error) { console.warn('同期データの反映に失敗しました。', error); }
+        });
+
+        if ('BroadcastChannel' in window) {
+          channel = new BroadcastChannel(CHANNEL_NAME);
+          channel.addEventListener('message', (event) => {
+            if (!event.data || event.data.type !== 'state') return;
+            receiveExternalState(event.data.state);
+          });
+        }
+
+        setInterval(() => {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            receiveExternalState(JSON.parse(raw));
+          } catch (error) {
+            console.warn('定期同期に失敗しました。', error);
+          }
+        }, 900);
+      }
+
+      function init() {
+        renderPlayerNameInputs();
+        applyInputsFromState();
+        bindEvents();
+        renderAll();
+        applyModeFromHash();
+        saveState({ broadcast: false });
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
