@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>アタックサバイバル</title>
+  <meta name="app-build" content="2026-06-28-streak-persistence" />
   <style>
     :root {
       --bg: #f3f5f9;
@@ -149,15 +150,29 @@
 
     .playerNameGrid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
       gap: 8px;
     }
 
     .playerNameItem {
       display: grid;
-      grid-template-columns: 34px minmax(0, 1fr);
-      align-items: center;
-      gap: 6px;
+      grid-template-columns: 34px minmax(0, 1fr) 88px;
+      align-items: end;
+      gap: 7px;
+      padding: 8px;
+      border: 1px solid #e4e7ec;
+      border-radius: 10px;
+      background: #fbfcfe;
+    }
+
+    .playerInputField { min-width: 0; }
+    .playerInputField label { margin-bottom: 3px; font-size: 11px; }
+    .playerInitialLifeInput { text-align: center; font-weight: 900; }
+
+    .applyLifeAllActions {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr;
     }
 
     .bulkPlayerBox {
@@ -209,6 +224,64 @@
     }
     .resetActions { grid-template-columns: 1fr 1fr; }
 
+    .panelHeadingRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .panelHeadingRow h2 { margin: 0; }
+
+    .correctionBox { display: grid; gap: 12px; }
+    .correctionGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .correctionItem {
+      min-width: 0;
+      padding: 9px;
+      border: 1px solid #e4e7ec;
+      border-radius: 10px;
+      background: #f8fafc;
+    }
+    .correctionStepper {
+      display: grid;
+      grid-template-columns: 38px minmax(54px, 1fr) 38px;
+      gap: 6px;
+      align-items: center;
+    }
+    .correctionStepper button {
+      height: 38px;
+      padding: 0;
+      border-radius: 9px;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .correctionStepper input {
+      min-width: 0;
+      height: 38px;
+      padding: 7px 4px;
+      text-align: center;
+      font-weight: 950;
+    }
+    .correctionActions {
+      display: grid;
+      grid-template-columns: 1fr 1.35fr;
+      gap: 8px;
+    }
+    .tableActionBtns {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+    .tableActionBtns button {
+      min-width: 54px;
+      padding: 7px 9px;
+      font-size: 12px;
+    }
+
     .statusSummary {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -249,6 +322,7 @@
     td.nameCell { min-width: 160px; text-align: left; font-weight: 900; }
     tr.eliminatedRow { background: #fff1f0; }
     tr.restingRow:not(.eliminatedRow) { background: #f2f4f7; color: #667085; }
+    tr.criticalRow:not(.eliminatedRow):not(.restingRow) { background: #fffaeb; }
     tr.emptyRow { color: #98a2b3; }
 
     .pill {
@@ -265,6 +339,7 @@
     }
     .pill.ok { background: #dcfae6; color: #067647; }
     .pill.warn { background: #fef0c7; color: #93370d; }
+    .pill.critical { background: #fff3cd; color: #8a4b08; }
     .pill.dead { background: #fee4e2; color: #b42318; }
 
     .historyList {
@@ -393,6 +468,7 @@
     }
     .displayCard:nth-child(4n) { border-right: 0; }
     .displayCard.resting { background: #222733; }
+    .displayCard.critical:not(.eliminated) { box-shadow: inset 0 0 0 4px #fbbf24; }
     .displayCard.eliminated { background: #8b1111; }
 
     .displayName {
@@ -447,18 +523,26 @@
 
     .displayDamage {
       display: inline-flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       max-width: 100%;
       min-width: min(88%, 260px);
       padding: .16em .55em .2em;
       border: 2px solid rgba(255,255,255,.86);
-      border-radius: 999px;
+      border-radius: 14px;
       font-size: clamp(12px, 1.05vw, 18px);
       font-weight: 950;
       line-height: 1.08;
       white-space: nowrap;
       overflow: hidden;
+    }
+    .displayDamage.criticalDamage { border-color: #fbbf24; color: #fff7d6; }
+    .displayStreak {
+      margin-top: .12em;
+      color: #fde68a;
+      font-size: .82em;
+      line-height: 1.05;
     }
 
     .displayToolbox {
@@ -497,8 +581,8 @@
       .app { width: min(100% - 18px, 1480px); margin-top: 10px; }
       .appHeader { flex-direction: column; }
       .topActions { justify-content: flex-start; }
-      .fieldGrid, .playerNameGrid, .answerActions, .resetActions, .historyControls, .bulkActions { grid-template-columns: 1fr; }
-      .playerNameItem { grid-template-columns: 34px minmax(0, 1fr) auto; }
+      .fieldGrid, .playerNameGrid, .answerActions, .resetActions, .historyControls, .bulkActions, .correctionGrid, .correctionActions { grid-template-columns: 1fr; }
+      .playerNameItem { grid-template-columns: 34px minmax(0, 1fr) 78px; }
       .statusSummary { grid-template-columns: 1fr 1fr; }
     }
   </style>
@@ -508,7 +592,7 @@
     <header class="appHeader">
       <div class="titleBlock">
         <h1>アタックサバイバル</h1>
-        <p>ライフポイントが0にならないように正解を続けろ</p>
+        <p>クイズ大会運営用Webアプリ。HTML単体で動作し、オンラインの静的ページとして公開しても同じ画面構成で使えます。</p>
       </div>
       <div class="topActions">
         <button type="button" id="openDisplayBtn">表示画面を別ウィンドウで開く</button>
@@ -526,7 +610,7 @@
               <textarea id="ruleText" placeholder="例：正解で他全員にダメージ／誤答で休み＋攻撃力減少"></textarea>
             </div>
             <div>
-              <label for="initialLife">初期ライフポイント</label>
+              <label for="initialLife">共通初期ライフポイント</label>
               <input type="number" id="initialLife" min="1" step="1" />
             </div>
             <div>
@@ -541,8 +625,12 @@
               <label for="missDamageDown">誤答時の相手へのダメージ減少数</label>
               <input type="number" id="missDamageDown" min="0" step="1" />
             </div>
+            <div class="applyLifeAllActions">
+              <button type="button" class="btn-ghost" id="applyInitialLifeAllBtn">共通初期ライフを全員に反映</button>
+            </div>
           </div>
-          <p class="hint">設定変更は自動保存されます。初期値を試合に反映する場合は「設定だけ残して試合状況をリセット」を押してください。</p>
+          <p class="hint">各プレイヤーの初期ライフはプレイヤー設定で個別に変更できます。変更した初期値を現在の試合へ反映する場合は「設定だけ残して試合状況をリセット」を押してください。</p>
+          <p class="hint">現在ライフがそのプレイヤーの初期ライフの10分の1以下になると、同じプレイヤーが続けて正解した回数に応じて、相手へのダメージが1倍・2倍・3倍……になります。連答権は、保持者本人が誤答したとき、または別のプレイヤーが正解して連答権が移動したときだけ失われます。非保持者の誤答やスルーでは維持されます。</p>
         </section>
 
         <section class="panel">
@@ -564,7 +652,7 @@
             <p class="hint">1行につき1名で最大12名まで反映します。1行の中でカンマ・読点・タブ区切りにした場合も一括入力できます。</p>
           </div>
           <div class="playerNameGrid" id="playerNameGrid"></div>
-          <p class="hint">名前が空欄のプレイヤーは、表示画面ではカード・白枠・背景を含めて完全に非表示になります。全員を空欄にする場合は「プレイヤー欄を一括削除」を使用してください。</p>
+          <p class="hint">名前が空欄のプレイヤーは、表示画面ではカード・白枠・背景を含めて完全に非表示になります。各行の「初期LP」は次回の試合状況リセット時に反映されます。</p>
         </section>
 
         <section class="panel">
@@ -580,6 +668,74 @@
               <button type="button" class="btn-secondary" id="passBtn">スルー</button>
             </div>
             <div class="historyControls"><button type="button" class="btn-ghost" id="undoBtn">Undo</button><button type="button" class="btn-ghost" id="redoBtn">Redo</button></div>
+          </div>
+        </section>
+
+        <section class="panel" id="manualCorrectionPanel">
+          <div class="panelHeadingRow">
+            <h2>試合中の手動補正</h2>
+            <span class="pill">Undo / Redo対応</span>
+          </div>
+          <div class="correctionBox">
+            <div>
+              <label for="correctionSelect">補正対象プレイヤー</label>
+              <select id="correctionSelect"></select>
+            </div>
+            <div class="correctionGrid">
+              <div class="correctionItem">
+                <label for="correctionLife">ライフ</label>
+                <div class="correctionStepper">
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionLife" data-delta="-1" aria-label="ライフを1減らす">−</button>
+                  <input type="number" id="correctionLife" min="0" step="1" />
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionLife" data-delta="1" aria-label="ライフを1増やす">＋</button>
+                </div>
+              </div>
+              <div class="correctionItem">
+                <label for="correctionDamage">相手へのダメージ</label>
+                <div class="correctionStepper">
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionDamage" data-delta="-1" aria-label="相手へのダメージを1減らす">−</button>
+                  <input type="number" id="correctionDamage" min="0" step="1" />
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionDamage" data-delta="1" aria-label="相手へのダメージを1増やす">＋</button>
+                </div>
+              </div>
+              <div class="correctionItem">
+                <label for="correctionRest">残り休み</label>
+                <div class="correctionStepper">
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionRest" data-delta="-1" aria-label="残り休みを1減らす">−</button>
+                  <input type="number" id="correctionRest" min="0" step="1" />
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionRest" data-delta="1" aria-label="残り休みを1増やす">＋</button>
+                </div>
+              </div>
+              <div class="correctionItem">
+                <label for="correctionCorrect">正解数</label>
+                <div class="correctionStepper">
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionCorrect" data-delta="-1" aria-label="正解数を1減らす">−</button>
+                  <input type="number" id="correctionCorrect" min="0" step="1" />
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionCorrect" data-delta="1" aria-label="正解数を1増やす">＋</button>
+                </div>
+              </div>
+              <div class="correctionItem">
+                <label for="correctionWrong">誤答数</label>
+                <div class="correctionStepper">
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionWrong" data-delta="-1" aria-label="誤答数を1減らす">−</button>
+                  <input type="number" id="correctionWrong" min="0" step="1" />
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionWrong" data-delta="1" aria-label="誤答数を1増やす">＋</button>
+                </div>
+              </div>
+              <div class="correctionItem">
+                <label for="correctionStreak">連答数</label>
+                <div class="correctionStepper">
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionStreak" data-delta="-1" aria-label="連答数を1減らす">−</button>
+                  <input type="number" id="correctionStreak" min="0" step="1" />
+                  <button type="button" class="btn-secondary correctionStepBtn" data-target="correctionStreak" data-delta="1" aria-label="連答数を1増やす">＋</button>
+                </div>
+              </div>
+            </div>
+            <div class="correctionActions">
+              <button type="button" class="btn-ghost" id="reloadCorrectionBtn">現在値を再読込</button>
+              <button type="button" class="btn-ok" id="applyCorrectionBtn">補正を適用</button>
+            </div>
+            <p class="hint">数値を直接入力するか、±ボタンで調整してから適用してください。ライフと相手へのダメージがともに1以上なら脱落状態を解除し、どちらかが0なら脱落として扱います。連答数を1以上にすると、そのプレイヤーへ連答権が移ります。</p>
           </div>
         </section>
 
@@ -604,12 +760,14 @@
                   <th>#</th>
                   <th>プレイヤー名</th>
                   <th>状態</th>
+                  <th>初期LP</th>
                   <th>ライフ</th>
                   <th>残り休み</th>
                   <th>正解</th>
                   <th>誤答</th>
+                  <th>連答</th>
                   <th>相手へのダメージ</th>
-                  <th>選択</th>
+                  <th>操作</th>
                 </tr>
               </thead>
               <tbody id="statusTableBody"></tbody>
@@ -643,9 +801,9 @@
       'use strict';
 
       const PLAYER_MAX = 12;
-      const STORAGE_KEY = 'attackSurvivalState.v4';
-      const LEGACY_KEYS = ['attackSurvivalState.v3', 'attackSurvivalState.v2'];
-      const CHANNEL_NAME = 'attackSurvivalChannel.v4';
+      const STORAGE_KEY = 'attackSurvivalState.v5';
+      const LEGACY_KEYS = ['attackSurvivalState.v4', 'attackSurvivalState.v3', 'attackSurvivalState.v2'];
+      const CHANNEL_NAME = 'attackSurvivalChannel.v5';
       const SESSION_ID = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const $ = (id) => document.getElementById(id);
 
@@ -655,22 +813,33 @@
       const defaultSettings = () => ({
         ruleText: '正解で他全員にダメージ／誤答で休み＋ダメージ減少／スルーで全員ライフ-1',
         initialLife: 10,
+        initialLives: Array.from({ length: PLAYER_MAX }, () => 10),
         initialDamage: 3,
         missRest: 1,
         missDamageDown: 1,
         names: Array.from({ length: PLAYER_MAX }, () => '')
       });
 
-      const createPlayer = (index, name = '', settings = defaultSettings()) => ({
-        id: index + 1,
-        name: String(name || ''),
-        life: toInt(settings.initialLife, 10),
-        damage: toInt(settings.initialDamage, 3),
-        rest: 0,
-        correct: 0,
-        wrong: 0,
-        eliminated: false
-      });
+      const configuredInitialLife = (settings, index) => clampInt(
+        Array.isArray(settings.initialLives) ? settings.initialLives[index] : settings.initialLife,
+        1,
+        clampInt(settings.initialLife, 1, 10)
+      );
+
+      const createPlayer = (index, name = '', settings = defaultSettings()) => {
+        const initialLife = configuredInitialLife(settings, index);
+        return {
+          id: index + 1,
+          name: String(name || ''),
+          initialLife,
+          life: initialLife,
+          damage: toInt(settings.initialDamage, 3),
+          rest: 0,
+          correct: 0,
+          wrong: 0,
+          eliminated: false
+        };
+      };
 
       let state = loadState();
 
@@ -688,6 +857,8 @@
         const merged = { ...base, ...(raw || {}) };
         merged.ruleText = String(merged.ruleText || base.ruleText);
         merged.initialLife = clampInt(merged.initialLife, 1, base.initialLife);
+        const rawInitialLives = Array.isArray(raw?.initialLives) ? raw.initialLives : [];
+        merged.initialLives = Array.from({ length: PLAYER_MAX }, (_, i) => clampInt(rawInitialLives[i], 1, merged.initialLife));
         merged.initialDamage = clampInt(merged.initialDamage, 1, base.initialDamage);
         merged.missRest = clampInt(merged.missRest, 0, base.missRest);
         merged.missDamageDown = clampInt(merged.missDamageDown, 0, base.missDamageDown);
@@ -700,10 +871,12 @@
         return Array.from({ length: PLAYER_MAX }, (_, i) => {
           const raw = source[i] || {};
           const name = String(settings.names[i] ?? raw.name ?? '');
+          const initialLife = clampInt(raw.initialLife, 1, configuredInitialLife(settings, i));
           const p = {
             id: i + 1,
             name,
-            life: toInt(raw.life, settings.initialLife),
+            initialLife,
+            life: toInt(raw.life, initialLife),
             damage: toInt(raw.damage, settings.initialDamage),
             rest: Math.max(0, toInt(raw.rest, 0)),
             correct: Math.max(0, toInt(raw.correct, 0)),
@@ -714,6 +887,15 @@
           p.eliminated = p.eliminated || (p.name.trim() && (p.life <= 0 || p.damage <= 0));
           return p;
         });
+      }
+
+      function normalizeStreak(raw) {
+        const index = Number(raw?.playerIndex);
+        const count = Math.max(0, toInt(raw?.count, 0));
+        if (!Number.isInteger(index) || index < 0 || index >= PLAYER_MAX || count < 1) {
+          return { playerIndex: null, count: 0 };
+        }
+        return { playerIndex: index, count };
       }
 
       function sanitizeStackForStartup(stack, shouldResetHistory) {
@@ -746,6 +928,7 @@
             history: [],
             undoStack: [],
             redoStack: [],
+            streak: { playerIndex: null, count: 0 },
             updatedAt: Date.now(),
             sourceId: SESSION_ID
           };
@@ -759,6 +942,7 @@
             history: resetHistoryOnStartup ? [] : (Array.isArray(parsed.history) ? parsed.history : []),
             undoStack: sanitizeStackForStartup(parsed.undoStack, resetHistoryOnStartup),
             redoStack: sanitizeStackForStartup(parsed.redoStack, resetHistoryOnStartup),
+            streak: normalizeStreak(parsed.streak),
             updatedAt: Date.now(),
             sourceId: SESSION_ID
           };
@@ -771,6 +955,7 @@
             history: [],
             undoStack: [],
             redoStack: [],
+            streak: { playerIndex: null, count: 0 },
             updatedAt: Date.now(),
             sourceId: SESSION_ID
           };
@@ -790,7 +975,8 @@
         return JSON.parse(JSON.stringify({
           settings: state.settings,
           players: state.players,
-          history: state.history
+          history: state.history,
+          streak: state.streak
         }));
       }
 
@@ -799,6 +985,7 @@
         state.settings = settings;
         state.players = normalizePlayers(snapshot.players, settings);
         state.history = Array.isArray(snapshot.history) ? snapshot.history : [];
+        state.streak = normalizeStreak(snapshot.streak);
       }
 
       function pushUndo({ clearRedo = true } = {}) {
@@ -837,6 +1024,24 @@
 
       function livingPlayers() {
         return activePlayers().filter(p => !p.eliminated);
+      }
+
+      function isCritical(p) {
+        return Boolean(p?.name?.trim()) && !p.eliminated && p.life > 0 && (p.life * 10 <= Math.max(1, p.initialLife));
+      }
+
+      function resetStreak() {
+        state.streak = { playerIndex: null, count: 0 };
+      }
+
+      function currentStreakFor(index) {
+        return state.streak?.playerIndex === index ? Math.max(0, toInt(state.streak.count, 0)) : 0;
+      }
+
+      function currentEffectiveDamage(p, index) {
+        const base = Math.max(0, toInt(p?.damage, 0));
+        const streak = currentStreakFor(index);
+        return base * (isCritical(p) && streak > 1 ? streak : 1);
       }
 
       function checkElimination(p) {
@@ -890,7 +1095,13 @@
         if (!selected) return;
         const { index, player } = selected;
         pushUndo();
-        const damage = Math.max(0, toInt(player.damage, 0));
+        const previousStreakHolder = Number.isInteger(state.streak?.playerIndex) ? state.streak.playerIndex : null;
+        const streakTransferred = previousStreakHolder !== null && previousStreakHolder !== index;
+        const nextStreak = previousStreakHolder === index ? Math.max(1, toInt(state.streak.count, 0) + 1) : 1;
+        state.streak = { playerIndex: index, count: nextStreak };
+        const baseDamage = Math.max(0, toInt(player.damage, 0));
+        const multiplier = isCritical(player) ? nextStreak : 1;
+        const damage = baseDamage * multiplier;
         player.correct += 1;
         let eliminatedCount = 0;
         state.players.forEach((target, i) => {
@@ -901,7 +1112,9 @@
           if (wasAlive && target.eliminated) eliminatedCount += 1;
         });
         advanceRest();
-        pushHistory(`正解：${player.name}（他の生存者へ${damage}ダメージ${eliminatedCount ? `、${eliminatedCount}名脱落` : ''}）`);
+        const streakText = multiplier > 1 ? `、瀕死連答${nextStreak}回で×${multiplier}` : '';
+        const transferText = streakTransferred ? '、連答権移動' : '';
+        pushHistory(`正解：${player.name}（他の生存者へ${damage}ダメージ${streakText}${transferText}${eliminatedCount ? `、${eliminatedCount}名脱落` : ''}）`);
         saveState();
         renderAll();
       }
@@ -911,6 +1124,9 @@
         if (!selected) return;
         const { index, player } = selected;
         pushUndo();
+        const hadStreakHolder = Number.isInteger(state.streak?.playerIndex);
+        const wasStreakHolder = state.streak?.playerIndex === index;
+        if (wasStreakHolder) resetStreak();
         const rest = Math.max(0, toInt(state.settings.missRest, 0));
         const down = Math.max(0, toInt(state.settings.missDamageDown, 0));
         advanceRest(index);
@@ -919,7 +1135,8 @@
         player.damage -= down;
         const wasAlive = !player.eliminated;
         checkElimination(player);
-        pushHistory(`誤答：${player.name}（休み${rest}問、相手へのダメージ-${down}${wasAlive && player.eliminated ? '、脱落' : ''}）`);
+        const streakResult = wasStreakHolder ? '、連答権消失' : hadStreakHolder ? '、連答権維持' : '';
+        pushHistory(`誤答：${player.name}（休み${rest}問、相手へのダメージ-${down}${streakResult}${wasAlive && player.eliminated ? '、脱落' : ''}）`);
         saveState();
         renderAll();
       }
@@ -931,6 +1148,7 @@
           return;
         }
         pushUndo();
+        const streakMaintained = Number.isInteger(state.streak?.playerIndex);
         let eliminatedCount = 0;
         alive.forEach(p => {
           p.life -= 1;
@@ -939,7 +1157,7 @@
           if (wasAlive && p.eliminated) eliminatedCount += 1;
         });
         advanceRest();
-        pushHistory(`スルー：生存者全員のライフ-1${eliminatedCount ? `、${eliminatedCount}名脱落` : ''}`);
+        pushHistory(`スルー：生存者全員のライフ-1${streakMaintained ? '、連答権維持' : ''}${eliminatedCount ? `、${eliminatedCount}名脱落` : ''}`);
         saveState();
         renderAll();
       }
@@ -977,6 +1195,7 @@
         if (!confirm('プレイヤー名とルール設定を残して、ライフ・休み・正解数・誤答数・脱落状態を初期化します。よろしいですか？')) return;
         pushUndo();
         state.players = state.settings.names.map((name, i) => createPlayer(i, name, state.settings));
+        resetStreak();
         state.history = [];
         pushHistory('試合状況をリセットしました');
         saveState();
@@ -992,6 +1211,7 @@
           history: [],
           undoStack: [],
           redoStack: [],
+          streak: { playerIndex: null, count: 0 },
           updatedAt: Date.now(),
           sourceId: SESSION_ID
         };
@@ -1000,6 +1220,21 @@
         saveState();
         renderAll();
         showToast('全状態を初期化しました。');
+      }
+
+      function applyInitialLifeToAll() {
+        const value = clampInt($('initialLife').value, 1, defaultSettings().initialLife);
+        pushUndo();
+        state.settings.initialLife = value;
+        state.settings.initialLives = Array.from({ length: PLAYER_MAX }, () => value);
+        for (let i = 0; i < PLAYER_MAX; i++) {
+          const input = $('playerInitialLife' + i);
+          if (input) input.value = value;
+        }
+        pushHistory(`共通初期ライフ${value}を全プレイヤー設定へ反映しました`);
+        saveState();
+        renderAll();
+        showToast('共通初期ライフを全員の個別設定へ反映しました。試合へ適用するには試合状況をリセットしてください。');
       }
 
       function namesToBulkText(names = state.settings.names) {
@@ -1047,7 +1282,7 @@
       function deleteAllPlayerSlots() {
         const hasAnyData = state.players.some((player, index) => {
           const name = String(state.settings.names[index] || player.name || '').trim();
-          return Boolean(name) || player.rest > 0 || player.correct > 0 || player.wrong > 0 || player.eliminated || player.life !== state.settings.initialLife || player.damage !== state.settings.initialDamage;
+          return Boolean(name) || player.rest > 0 || player.correct > 0 || player.wrong > 0 || player.eliminated || player.life !== configuredInitialLife(state.settings, index) || player.damage !== state.settings.initialDamage;
         });
         if (!hasAnyData) {
           showToast('削除できるプレイヤー欄がありません。');
@@ -1062,6 +1297,7 @@
           const input = $('playerName' + i);
           if (input) input.value = '';
         }
+        resetStreak();
         updateBulkNamesTextarea();
         pushHistory('プレイヤー欄を一括削除しました');
         saveState();
@@ -1077,6 +1313,11 @@
         state.settings.initialDamage = clampInt($('initialDamage').value, 1, defaultSettings().initialDamage);
         state.settings.missRest = clampInt($('missRest').value, 0, defaultSettings().missRest);
         state.settings.missDamageDown = clampInt($('missDamageDown').value, 0, defaultSettings().missDamageDown);
+        state.settings.initialLives = Array.from({ length: PLAYER_MAX }, (_, i) => clampInt(
+          $('playerInitialLife' + i)?.value,
+          1,
+          state.settings.initialLives?.[i] ?? state.settings.initialLife
+        ));
         for (let i = 0; i < PLAYER_MAX; i++) {
           state.settings.names[i] = ($('playerName' + i)?.value || '').trim();
           const player = state.players[i] || createPlayer(i, '', state.settings);
@@ -1085,18 +1326,15 @@
           const wasEmpty = !oldName.trim() && !player.name.trim();
           if (!newName.trim()) {
             state.players[i] = createPlayer(i, '', state.settings);
+            if (state.streak?.playerIndex === i) resetStreak();
             continue;
           }
           player.name = newName;
           if (wasEmpty) {
-            player.life = state.settings.initialLife;
-            player.damage = state.settings.initialDamage;
-            player.rest = 0;
-            player.correct = 0;
-            player.wrong = 0;
-            player.eliminated = false;
+            state.players[i] = createPlayer(i, newName, state.settings);
+          } else {
+            state.players[i] = player;
           }
-          state.players[i] = player;
         }
         if (!options.skipBulkRefresh) updateBulkNamesTextarea();
         saveState();
@@ -1112,6 +1350,8 @@
         for (let i = 0; i < PLAYER_MAX; i++) {
           const input = $('playerName' + i);
           if (input) input.value = state.settings.names[i] || '';
+          const lifeInput = $('playerInitialLife' + i);
+          if (lifeInput) lifeInput.value = configuredInitialLife(state.settings, i);
         }
         updateBulkNamesTextarea();
       }
@@ -1124,7 +1364,14 @@
           item.className = 'playerNameItem';
           item.innerHTML = `
             <div class="numBadge">${i + 1}</div>
-            <input type="text" id="playerName${i}" maxlength="24" placeholder="プレイヤー${i + 1}" autocomplete="off" />
+            <div class="playerInputField">
+              <label for="playerName${i}">プレイヤー名</label>
+              <input type="text" id="playerName${i}" maxlength="24" placeholder="プレイヤー${i + 1}" autocomplete="off" />
+            </div>
+            <div class="playerInputField">
+              <label for="playerInitialLife${i}">初期LP</label>
+              <input class="playerInitialLifeInput" type="number" id="playerInitialLife${i}" min="1" step="1" />
+            </div>
           `;
           wrap.appendChild(item);
         }
@@ -1154,12 +1401,157 @@
         }
       }
 
+
+      const CORRECTION_FIELDS = [
+        'correctionLife',
+        'correctionDamage',
+        'correctionRest',
+        'correctionCorrect',
+        'correctionWrong',
+        'correctionStreak'
+      ];
+
+      function selectedCorrectionIndex() {
+        const select = $('correctionSelect');
+        if (!select || select.value === '') return null;
+        const index = Number(select.value);
+        return Number.isInteger(index) && index >= 0 && index < PLAYER_MAX ? index : null;
+      }
+
+      function setCorrectionControlsDisabled(disabled) {
+        CORRECTION_FIELDS.forEach(id => { if ($(id)) $(id).disabled = disabled; });
+        document.querySelectorAll('.correctionStepBtn').forEach(button => { button.disabled = disabled; });
+        if ($('reloadCorrectionBtn')) $('reloadCorrectionBtn').disabled = disabled;
+        if ($('applyCorrectionBtn')) $('applyCorrectionBtn').disabled = disabled;
+      }
+
+      function loadCorrectionValues() {
+        const index = selectedCorrectionIndex();
+        const player = index === null ? null : state.players[index];
+        const valid = Boolean(player?.name?.trim());
+        setCorrectionControlsDisabled(!valid);
+        if (!valid) {
+          CORRECTION_FIELDS.forEach(id => { if ($(id)) $(id).value = ''; });
+          return;
+        }
+        $('correctionLife').value = Math.max(0, toInt(player.life, 0));
+        $('correctionDamage').value = Math.max(0, toInt(player.damage, 0));
+        $('correctionRest').value = Math.max(0, toInt(player.rest, 0));
+        $('correctionCorrect').value = Math.max(0, toInt(player.correct, 0));
+        $('correctionWrong').value = Math.max(0, toInt(player.wrong, 0));
+        $('correctionStreak').value = currentStreakFor(index);
+      }
+
+      function renderCorrectionSelect() {
+        const select = $('correctionSelect');
+        if (!select) return;
+        const previous = select.value;
+        select.innerHTML = '';
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = '補正対象を選択';
+        select.appendChild(empty);
+        activePlayers().forEach(player => {
+          const option = document.createElement('option');
+          const index = player.id - 1;
+          option.value = String(index);
+          const status = player.eliminated ? '脱落' : player.rest > 0 ? `休み${player.rest}` : '生存';
+          option.textContent = `${player.id}. ${player.name}（${status}）`;
+          select.appendChild(option);
+        });
+        if ([...select.options].some(option => option.value === previous)) {
+          select.value = previous;
+        } else if (activePlayers().length) {
+          select.value = String(activePlayers()[0].id - 1);
+        }
+        loadCorrectionValues();
+      }
+
+      function adjustCorrectionValue(targetId, delta) {
+        const input = $(targetId);
+        if (!input || input.disabled) return;
+        input.value = Math.max(0, toInt(input.value, 0) + toInt(delta, 0));
+      }
+
+      function applyManualCorrection() {
+        const index = selectedCorrectionIndex();
+        const player = index === null ? null : state.players[index];
+        if (!player?.name?.trim()) {
+          showToast('補正対象プレイヤーを選択してください。');
+          return;
+        }
+
+        const next = {
+          life: Math.max(0, toInt($('correctionLife').value, player.life)),
+          damage: Math.max(0, toInt($('correctionDamage').value, player.damage)),
+          rest: Math.max(0, toInt($('correctionRest').value, player.rest)),
+          correct: Math.max(0, toInt($('correctionCorrect').value, player.correct)),
+          wrong: Math.max(0, toInt($('correctionWrong').value, player.wrong)),
+          streak: Math.max(0, toInt($('correctionStreak').value, currentStreakFor(index)))
+        };
+        const before = {
+          life: Math.max(0, toInt(player.life, 0)),
+          damage: Math.max(0, toInt(player.damage, 0)),
+          rest: Math.max(0, toInt(player.rest, 0)),
+          correct: Math.max(0, toInt(player.correct, 0)),
+          wrong: Math.max(0, toInt(player.wrong, 0)),
+          streak: currentStreakFor(index),
+          eliminated: Boolean(player.eliminated)
+        };
+        const nextEliminated = next.life <= 0 || next.damage <= 0;
+        const streakWillChange = next.streak > 0
+          ? state.streak?.playerIndex !== index || currentStreakFor(index) !== next.streak
+          : state.streak?.playerIndex === index;
+        const hasChange = ['life', 'damage', 'rest', 'correct', 'wrong'].some(key => before[key] !== next[key])
+          || before.eliminated !== nextEliminated
+          || streakWillChange;
+        if (!hasChange) {
+          showToast('補正する変更がありません。');
+          return;
+        }
+
+        pushUndo();
+        player.life = next.life;
+        player.damage = next.damage;
+        player.rest = next.rest;
+        player.correct = next.correct;
+        player.wrong = next.wrong;
+        player.eliminated = nextEliminated;
+        if (player.eliminated) {
+          player.rest = 0;
+          if (state.streak?.playerIndex === index) resetStreak();
+        } else if (next.streak > 0) {
+          state.streak = { playerIndex: index, count: next.streak };
+        } else if (state.streak?.playerIndex === index) {
+          resetStreak();
+        }
+
+        const changes = [];
+        const labels = {
+          life: 'ライフ', damage: '相手へのダメージ', rest: '残り休み',
+          correct: '正解数', wrong: '誤答数'
+        };
+        Object.entries(labels).forEach(([key, label]) => {
+          const actualNext = key === 'rest' ? player.rest : next[key];
+          if (before[key] !== actualNext) changes.push(`${label} ${before[key]}→${actualNext}`);
+        });
+        const afterStreak = currentStreakFor(index);
+        if (before.streak !== afterStreak || streakWillChange) changes.push(`連答数 ${before.streak}→${afterStreak}`);
+        if (before.eliminated !== player.eliminated) changes.push(`状態 ${before.eliminated ? '脱落' : '生存'}→${player.eliminated ? '脱落' : '生存'}`);
+        pushHistory(`手動補正：${player.name}（${changes.join('、')}）`);
+        saveState();
+        renderAll();
+        showToast(`${player.name}の試合状況を補正しました。`);
+      }
+
       function renderSummary() {
         const active = activePlayers();
         const alive = active.filter(p => !p.eliminated);
         const resting = alive.filter(p => p.rest > 0);
         const eliminated = active.filter(p => p.eliminated);
         const totalCorrect = active.reduce((sum, p) => sum + p.correct, 0);
+        const streakPlayer = Number.isInteger(state.streak?.playerIndex) ? state.players[state.streak.playerIndex] : null;
+        const streakLabel = streakPlayer?.name?.trim() ? `${streakPlayer.name} ×${Math.max(1, toInt(state.streak.count, 1))}` : 'なし';
         const items = [
           ['参加者', active.length],
           ['生存', alive.length],
@@ -1167,7 +1559,8 @@
           ['脱落', eliminated.length],
           ['累計正解', totalCorrect],
           ['残り最大ライフ', alive.length ? Math.max(...alive.map(p => p.life)) : 0],
-          ['最大ダメージ', alive.length ? Math.max(...alive.map(p => p.damage)) : 0],
+          ['最大ダメージ', alive.length ? Math.max(...alive.map(p => currentEffectiveDamage(p, p.id - 1))) : 0],
+          ['連答権', streakLabel],
           ['Undo可能', state.undoStack.length],
           ['Redo可能', Array.isArray(state.redoStack) ? state.redoStack.length : 0]
         ];
@@ -1183,6 +1576,7 @@
         if (!p.name.trim()) return '<span class="pill">未設定</span>';
         if (p.eliminated) return '<span class="pill dead">脱落</span>';
         if (p.rest > 0) return `<span class="pill warn">休み${p.rest}</span>`;
+        if (isCritical(p)) return '<span class="pill critical">瀕死</span>';
         return '<span class="pill ok">生存</span>';
       }
 
@@ -1191,17 +1585,24 @@
         body.innerHTML = '';
         state.players.forEach((p, i) => {
           const tr = document.createElement('tr');
-          tr.className = !p.name.trim() ? 'emptyRow' : p.eliminated ? 'eliminatedRow' : p.rest > 0 ? 'restingRow' : '';
+          tr.className = !p.name.trim() ? 'emptyRow' : p.eliminated ? 'eliminatedRow' : p.rest > 0 ? 'restingRow' : isCritical(p) ? 'criticalRow' : '';
           tr.innerHTML = `
             <td>${i + 1}</td>
             <td class="nameCell">${p.name.trim() ? escapeHtml(p.name) : '未設定'}</td>
             <td>${playerStatusPill(p)}</td>
+            <td>${Math.max(1, toInt(p.initialLife, configuredInitialLife(state.settings, i)))}</td>
             <td>${Math.max(0, toInt(p.life, 0))}</td>
             <td>${Math.max(0, toInt(p.rest, 0))}</td>
             <td>${Math.max(0, toInt(p.correct, 0))}</td>
             <td>${Math.max(0, toInt(p.wrong, 0))}</td>
-            <td>${Math.max(0, toInt(p.damage, 0))}</td>
-            <td><button type="button" class="btn-ghost selectPlayerBtn" data-index="${i}" ${(!p.name.trim() || p.eliminated || p.rest > 0) ? 'disabled' : ''}>選択</button></td>
+            <td>${currentStreakFor(i)}</td>
+            <td>${isCritical(p) && currentStreakFor(i) > 1 ? `${currentEffectiveDamage(p, i)}（${Math.max(0, toInt(p.damage, 0))}×${currentStreakFor(i)}）` : Math.max(0, toInt(p.damage, 0))}</td>
+            <td>
+              <div class="tableActionBtns">
+                <button type="button" class="btn-ghost selectPlayerBtn" data-index="${i}" ${(!p.name.trim() || p.eliminated || p.rest > 0) ? 'disabled' : ''}>解答</button>
+                <button type="button" class="btn-secondary correctionPlayerBtn" data-index="${i}" ${!p.name.trim() ? 'disabled' : ''}>補正</button>
+              </div>
+            </td>
           `;
           body.appendChild(tr);
         });
@@ -1234,14 +1635,23 @@
         }
         visible.forEach(p => {
           const card = document.createElement('div');
-          card.className = 'displayCard' + (p.eliminated ? ' eliminated' : p.rest > 0 ? ' resting' : '');
+          const critical = isCritical(p);
+          card.className = 'displayCard' + (p.eliminated ? ' eliminated' : p.rest > 0 ? ' resting' : '') + (critical ? ' critical' : '');
           const rest = Math.max(0, toInt(p.rest, 0));
+          const index = p.id - 1;
+          const streak = currentStreakFor(index);
+          const bonusActive = critical && streak > 1;
+          const baseDamage = Math.max(0, toInt(p.damage, 0));
+          const effectiveDamage = currentEffectiveDamage(p, index);
           card.innerHTML = `
             <div class="displayName" title="${escapeAttr(p.name)}">${escapeHtml(p.name)}</div>
             <div class="displayLife"><span>${Math.max(0, toInt(p.life, 0))}</span></div>
             ${rest > 0 ? `<div class="displayRest">残り${rest}休</div>` : ''}
             <div class="displayRecord">○ ${Math.max(0, toInt(p.correct, 0))}　× ${Math.max(0, toInt(p.wrong, 0))}</div>
-            <div class="displayDamage">相手へのダメージ ${Math.max(0, toInt(p.damage, 0))}</div>
+            <div class="displayDamage${critical ? ' criticalDamage' : ''}">
+              <span>相手へのダメージ ${effectiveDamage}</span>
+              ${bonusActive ? `<span class="displayStreak">基本${baseDamage} × 連答${streak}</span>` : critical ? '<span class="displayStreak">連答倍率対象</span>' : ''}
+            </div>
           `;
           grid.appendChild(card);
         });
@@ -1264,11 +1674,12 @@
         };
         fit($('displayRule'), 14);
         document.querySelectorAll('.displayName').forEach(el => fit(el, 12));
-        document.querySelectorAll('.displayRecord, .displayDamage, .displayRest').forEach(el => fit(el, 11));
+        document.querySelectorAll('.displayRecord, .displayDamage, .displayRest, .displayStreak').forEach(el => fit(el, 10));
       }
 
       function renderAll() {
         renderAnswerSelect();
+        renderCorrectionSelect();
         renderSummary();
         renderStatusTable();
         renderHistory();
@@ -1318,6 +1729,7 @@
           history: Array.isArray(incoming.history) ? incoming.history : [],
           undoStack: Array.isArray(incoming.undoStack) ? incoming.undoStack : [],
           redoStack: Array.isArray(incoming.redoStack) ? incoming.redoStack : [],
+          streak: normalizeStreak(incoming.streak),
           updatedAt: Number(incoming.updatedAt) || Date.now(),
           sourceId: incoming.sourceId || 'external'
         };
@@ -1334,7 +1746,11 @@
           const nameInput = $('playerName' + i);
           nameInput.addEventListener('input', syncSettingsFromInputs);
           nameInput.addEventListener('change', syncSettingsFromInputs);
+          const lifeInput = $('playerInitialLife' + i);
+          lifeInput.addEventListener('input', syncSettingsFromInputs);
+          lifeInput.addEventListener('change', syncSettingsFromInputs);
         }
+        $('applyInitialLifeAllBtn').addEventListener('click', applyInitialLifeToAll);
         $('applyBulkNamesBtn').addEventListener('click', applyBulkNames);
         $('loadBulkNamesBtn').addEventListener('click', () => {
           $('playerBulkNames').value = namesToBulkText();
@@ -1349,6 +1765,12 @@
         $('correctBtn').addEventListener('click', handleCorrect);
         $('wrongBtn').addEventListener('click', handleWrong);
         $('passBtn').addEventListener('click', handlePass);
+        $('correctionSelect').addEventListener('change', loadCorrectionValues);
+        $('reloadCorrectionBtn').addEventListener('click', loadCorrectionValues);
+        $('applyCorrectionBtn').addEventListener('click', applyManualCorrection);
+        document.querySelectorAll('.correctionStepBtn').forEach(button => {
+          button.addEventListener('click', () => adjustCorrectionValue(button.dataset.target, button.dataset.delta));
+        });
         $('undoBtn').addEventListener('click', handleUndo);
         $('redoBtn').addEventListener('click', handleRedo);
         $('resetMatchBtn').addEventListener('click', resetMatchKeepSettings);
@@ -1361,10 +1783,18 @@
         });
 
         $('statusTableBody').addEventListener('click', (event) => {
-          const btn = event.target.closest('.selectPlayerBtn');
-          if (!btn) return;
-          $('answerSelect').value = btn.dataset.index;
-          showToast(`${state.players[Number(btn.dataset.index)].name}を選択しました。`);
+          const answerButton = event.target.closest('.selectPlayerBtn');
+          if (answerButton) {
+            $('answerSelect').value = answerButton.dataset.index;
+            showToast(`${state.players[Number(answerButton.dataset.index)].name}を解答者に選択しました。`);
+            return;
+          }
+          const correctionButton = event.target.closest('.correctionPlayerBtn');
+          if (!correctionButton) return;
+          $('correctionSelect').value = correctionButton.dataset.index;
+          loadCorrectionValues();
+          $('manualCorrectionPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          showToast(`${state.players[Number(correctionButton.dataset.index)].name}を補正対象に選択しました。`);
         });
 
         $('displayFullBtn').addEventListener('click', async () => {
